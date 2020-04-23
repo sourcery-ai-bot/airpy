@@ -1,8 +1,3 @@
-class AlbumList:
-    def __init__(self, info):
-        self.list = parse
-
-
 class Album:
     def __init__(self, info):
         self.id = info.get('id')

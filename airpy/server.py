@@ -5,11 +5,11 @@ import os
 import sys
 
 from pathlib import Path
-from .music_folder import MusicFolder
-from .index import Index
-from .genres import GenreList
-from .artistslist import ArtistList
-from .artist import Artist
+from music_folder import MusicFolder
+from index import Index
+from genres import GenreList
+from artistslist import ArtistList
+from artist import Artist
 
 import settings as setting
 

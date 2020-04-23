@@ -2,9 +2,9 @@ class MusicFolderList:
     def __init__(self, music_folder_list):
         self.list = self.parse_music_folder_list(music_folder_list)
 
-    def parse_music_folder_list(self, music_folder_list):
+    def parse_music_folder_list(self, folders):
         music_folders = []
-        for folder in music_folder_list:
+        for folder in folders:
             music_folders.append(MusicFolder(folders[folder][0]))
         return music_folders
         
