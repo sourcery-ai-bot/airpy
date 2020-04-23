@@ -6,8 +6,10 @@ import sys
 
 from pathlib import Path
 from .music_folder import MusicFolder
-from .indexes import Indexes
+from .index import Index
 from .genres import GenreList
+from .artistslist import ArtistList
+from .artist import Artist
 
 import settings as setting
 
@@ -33,7 +35,7 @@ class Server:
     def __repr__(self):
         return self.host
 
-    def param_builder(self, **additional_params):
+    def param_builder(self, **kwargs):
         params = []
         username = 'u=' + self.username
         token = 't=' + self.token
@@ -42,20 +44,20 @@ class Server:
         app = 'c=' + self.app
         style = 'f=json'
         params.extend((username, token, salt, api_version, app, style))
-        parsed_additional_params = self.additional_param_parser(**additional_params)
+        parsed_additional_params = self.additional_param_parser(**kwargs)
         if parsed_additional_params != '':
             params.append(parsed_additional_params)
         return '&'.join(params)
 
-    def additional_param_parser(self, **additional_params):
+    def additional_param_parser(self, **kwargs):
         parsed_params = []
-        for param in additional_params:
-            if additional_params[param] is not None:
-                parsed_params.append(param + '=' + str(additional_params[param]))
+        for param in kwargs:
+            if kwargs[param] is not None:
+                parsed_params.append(param + '=' + str(kwargs[param]))
         return '&'.join(parsed_params)
 
-    def get(self, action, **additional_params):
-        params = self.param_builder(**additional_params)
+    def get(self, action, **kwargs):
+        params = self.param_builder(**kwargs)
         url = self.host + '/rest/' + action + '?' + params
         r = requests.get(url).json()
         if r['subsonic-response']['status'] == 'ok':
@@ -67,25 +69,19 @@ class Server:
         return self.get(action)
 
     def get_music_folders(self):
-        music_folders = []
-        action = 'getMusicFolders'
-        folders = self.get(action)['musicFolders']
-        for folder in folders:
-            music_folders.append(MusicFolder(folders[folder][0]))
-        return music_folders
+        return self.get('getMusicFolders')['musicFolders']
 
-    def get_indexes(self, music_folder_id=None, if_modified_since=None):
-        action = 'getIndexes'
-        indexes = Indexes(self.get(action, musicFolderId=music_folder_id, ifModifiedSince=if_modified_since)['indexes'])
-        return indexes
+    def get_indexes(self, **kwargs):
+        return Index(self.get('getIndexes', **kwargs)['indexes'])
 
-    def get_music_directory(self, music_folder_id=None):
-        action = 'getMusicDirectory'
-        files = self.get(action, id=music_folder_id)
-        return files
+    def get_music_directory(self, *, id):
+        return self.get('getMusicDirectory', id=id)
 
     def get_genres(self):
-        action = 'getGenres'
-        genres = GenreList(self.get(action)['genres']['genre'])
-        return genres
-        
+        return GenreList(self.get('getGenres')['genres']['genre'])
+
+    def get_artists(self, **kwargs):
+        return ArtistList(self.get('getArtists')['artists'])
+
+    def get_artist(self, *, id):
+        return Artist(self.get('getArtist', id=id)['artist'])

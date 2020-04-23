@@ -2,9 +2,6 @@ class GenreList:
     def __init__(self, genre_list):
         self.list = self.parse_genres(genre_list)
 
-    def __repr__(self):
-        return self.list
-
     def parse_genres(self, genre_list):
         parsed_genres = []
         for genre in genre_list:
