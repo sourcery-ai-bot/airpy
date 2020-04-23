@@ -1,0 +1,5 @@
+*__py_cache__*
+*.swp
+*.pyc
+settings.py
+

@@ -1,0 +1,5 @@
+username = "username"
+password = "password"
+salt = "salt"
+host = "https://airsonicserver"
+music_path = "~/airpy_music/"
