@@ -4,14 +4,6 @@ import requests
 import os
 import sys
 
-from pathlib import Path
-from airpy.music_folder import MusicFolder
-from airpy.index import Index
-from airpy.genres import GenreList
-from airpy.artistslist import ArtistList
-from airpy.artist import Artist
-from airpy.album import Album
-
 import settings as setting
 
 
@@ -63,14 +55,21 @@ class Server:
         r = requests.get(url).json()
         if r['subsonic-response']['status'] == 'ok':
             return r['subsonic-response']
-        sys.exit()
+        else:
+            print(r['subsonic-response'])
+            sys.exit()
+
+    def get_stream(self, action, **kwargs):
+        params = self.param_builder(**kwargs)
+        url = self.host + '/rest/' + action + '?' + params
+        return requests.get(url, stream=True).content
 
     def ping(self):
         action = 'ping'
         return self.get(action)
 
     def get_music_folders(self):
-        return self.get('getMusicFolders')['musicFolders']
+        return MusicFolderList(self.get('getMusicFolders')['musicFolders'])
 
     def get_indexes(self, **kwargs):
         return Index(self.get('getIndexes', **kwargs)['indexes'])
@@ -89,3 +88,231 @@ class Server:
 
     def get_album(self, *, id):
         return Album(self.get('getAlbum', id=id)['album'])
+
+    def get_song(self, *, id):
+        return Song(self.get('getSong', id=id)['song'])
+
+
+class Album:
+    def __init__(self, info):
+        self.id = info.get('id')
+        self.name = info.get('name')
+        self.artist = info.get('artist')
+        self.artist_id = info.get('artistId')
+        self.cover_art = info.get('coverArt')
+        self.song_count = info.get('songCount')
+        self.duration = info.get('duration')
+        self.created = info.get('created')
+        self.year = info.get('year')
+        self.genre = info.get('genre')
+        self.songs = self.parse_songs(info.get('song', []))
+
+    def __str__(self):
+        return self.name
+
+    def parse_songs(self, songs):
+        parsed_songs = []
+        for song in songs:
+            parsed_songs.append(s.Song(song))
+        return sorted(parsed_songs, key=lambda x: x.track)
+
+
+class Artist:
+    def __init__(self, info):
+        self.id = info.get('id')
+        self.name = info.get('name')
+        self.cover_art = info.get('coverArt')
+        self.album_count = info.get('albumCount')
+        self.albums = self.parse_albums(info.get('album'))
+        self.albums_by_release = self.parse_albums_by_release()
+
+    def parse_albums(self, albums):
+        parsed_albums = []
+        for album in albums:
+            parsed_albums.append(Album(album))
+        return parsed_albums
+
+    def parse_albums_by_release(self):
+        return sorted(self.albums, key=lambda x: x.year)
+        
+class ArtistList:
+    def __init__(self, info):
+        self.ignored_articles = info.get('ignoredArticles')
+        self.alpha_list = self.parse_letters(info.get('index'))
+        self.list = self.drop_letter_index()
+
+    def parse_letters(self, index):
+        parsed_letters = []
+        for letter in index:
+            parsed_letters.append(Letter(letter))
+        return parsed_letters
+
+    def drop_letter_index(self):
+        artists = []
+        for letter in self.alpha_list:
+            for artist in letter.artists:
+                artists.append(artist)
+        return artists
+
+class GenreList:
+    def __init__(self, genre_list):
+        self.list = self.parse_genres(genre_list)
+
+    def parse_genres(self, genre_list):
+        parsed_genres = []
+        for genre in genre_list:
+            parsed_genres.append(Genre(genre))
+        return parsed_genres
+
+    def by_name(self):
+        return sorted(self.list, key=lambda x: x.name.lower())
+
+    def by_song_count(self):
+        return sorted(self.list, key=lambda x: x.song_count, reverse=True)
+
+    def by_album_count(self):
+        return sorted(self.list, key=lambda x: x.album_count, reverse=True)
+
+
+class Genre:
+    def __init__(self, info):
+        self.song_count = info.get('songCount')
+        self.album_count = info.get('albumCount')
+        self.name = info.get('value')
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.name
+
+
+class Index:
+    def __init__(self, info):
+        self.last_modified = info.get('lastModified', None)
+        self.ignored_articles = info.get('ignoredArticles', None)
+        self.letters = self.parse_letters(info.get('index', [{}]))
+
+    def parse_letters(self, alpha_list):
+        letters = []
+        for letter in alpha_list:
+            letters.append(Letter(letter))
+        return letters
+
+
+class IndexArtist:
+    def __init__(self, info):
+        self.id = info.get('id')
+        self.name = info.get('name')
+
+    def __str__(self):
+        return self.name
+
+
+class Letter:
+    def __init__(self, info):
+        self.name = info.get('name')
+        self.artists = self.parse_artists(info.get('artist'))
+
+    def __str__(self):
+        return self.name
+
+    def parse_artists(self, artists):
+        parsed_artists = []
+        for artist in artists:
+            parsed_artists.append(IndexArtist(artist))
+        return parsed_artists
+
+
+class MusicFolder:
+    def __init__(self, info):
+        self.id = info.get('id')
+        self.name = info.get('name')
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return 'Music Folder: ' + self.name
+
+
+class MusicFolderList:
+    def __init__(self, music_folder_list):
+        self.list = self.parse_music_folder_list(music_folder_list)
+
+    def parse_music_folder_list(self, folders):
+        music_folders = []
+        for folder in folders:
+            music_folders.append(MusicFolder(folders[folder][0]))
+        return music_folders
+        
+
+class Song:
+    def __init__(self, info):
+        self.id = info.get('id')
+        self.parent = info.get('parent')
+        self.is_dir = info.get('isDir')
+        self.title = info.get('title')
+        self.album = info.get('album')
+        self.artist = info.get('artist')
+        self.track = info.get('track')
+        self.year = info.get('year')
+        self.genre = info.get('genre')
+        self.cover_art = info.get('coverArt')
+        self.size = info.get('size')
+        self.content_type = info.get('contentType')
+        self.suffix = info.get('suffix')
+        self.transcoded_content_type = info.get('transcodedContentType')
+        self.transcoded_suffix = info.get('transcodedSuffix')
+        self.duration = info.get('duration')
+        self.bitrate = info.get('bitRate')
+        self.path = info.get('path')
+        self.is_video = info.get('isVideo')
+        self.play_count = info.get('playCount')
+        self.disc_number = info.get('discNumber')
+        self.created = info.get('created')
+        self.album_id = info.get('albumId')
+        self.artist_id = info.get('artistId')
+        self.type = info.get('type')
+        self.cache_dir = './.songs'
+        self.cache_file = self._cached_file()
+        self.cached = False
+
+    def __str__(self):
+        return self.title
+           
+    def _cached_file(self):
+        s = server.Server()
+        cache_file = (self.cache_dir + '/' +
+                   self.artist + ' - ' + 
+                   self.album + ' - ' +
+                   str(self.track) + ' - ' +
+                   self.title + '.' + 
+                   s.format)
+        return cache_file
+
+    
+    def play(self):
+        if self.cached:
+            cache_file = '"' + self.cache_file + '"'
+            os.system('play -q ' + cache_file)
+        else:
+            self.cache()
+            self.play()
+
+    def cache(self):
+        if os.path.exists(self.cache_file):
+            self.cached = True
+        else:
+            Path(self.cache_file).touch()
+            if not os.path.exists(self.cache_dir):
+                os.mkdir(self.cache_dir)
+            s = server.Server()
+            data = s.get_stream('stream',
+                                    id=self.id,
+                                    format=s.format,
+                                    maxBitRate=s.max_bitrate)
+            with open (self.cache_file, 'wb') as fd:
+                fd.write(data)
+                fd.close()
+            self.cached = True 
