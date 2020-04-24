@@ -5,11 +5,12 @@ import os
 import sys
 
 from pathlib import Path
-from music_folder import MusicFolder
-from index import Index
-from genres import GenreList
-from artistslist import ArtistList
-from artist import Artist
+from .music_folder import MusicFolder
+from .index import Index
+from .genres import GenreList
+from .artistslist import ArtistList
+from .artist import Artist
+from .album import Album
 
 import settings as setting
 
@@ -85,3 +86,6 @@ class Server:
 
     def get_artist(self, *, id):
         return Artist(self.get('getArtist', id=id)['artist'])
+
+    def get_album(self, *, id):
+        return Album(self.get('getAlbum', id=id)['album'])

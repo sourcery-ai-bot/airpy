@@ -9,16 +9,13 @@ class GenreList:
         return parsed_genres
 
     def by_name(self):
-        genres = self.list
-        return sorted(genres, key=lambda x: x.name.lower())
+        return sorted(self.list, key=lambda x: x.name.lower())
 
     def by_song_count(self):
-        genres = self.list
-        return sorted(genres, key=lambda x: x.song_count, reverse=True)
+        return sorted(self.list, key=lambda x: x.song_count, reverse=True)
 
     def by_album_count(self):
-        genres = self.list
-        return sorted(genres, key=lambda x: x.album_count, reverse=True)
+        return sorted(self.list, key=lambda x: x.album_count, reverse=True)
 
 
 class Genre:

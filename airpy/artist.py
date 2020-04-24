@@ -1,4 +1,4 @@
-from album import Album
+from .album import Album
 
 class Artist:
     def __init__(self, info):

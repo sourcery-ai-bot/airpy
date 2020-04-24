@@ -1,0 +1,30 @@
+class Song:
+    def __init__(self, info):
+        self.id = info.get('id')
+        self.parent = info.get('parent')
+        self.is_dir = info.get('isDir')
+        self.title = info.get('title')
+        self.album = info.get('album')
+        self.artist = info.get('artist')
+        self.track = info.get('track')
+        self.year = info.get('year')
+        self.genre = info.get('genre')
+        self.cover_art = info.get('coverArt')
+        self.size = info.get('size')
+        self.content_type = info.get('contentType')
+        self.suffix = info.get('suffix')
+        self.transcoded_content_type = info.get('transcodedContentType')
+        self.transcoded_suffix = info.get('transcodedSuffix')
+        self.duration = info.get('duration')
+        self.bitrate = info.get('bitRate')
+        self.path = info.get('path')
+        self.is_video = info.get('isVideo')
+        self.play_count = info.get('playCount')
+        self.disc_number = info.get('discNumber')
+        self.created = info.get('created')
+        self.album_id = info.get('albumId')
+        self.artist_id = info.get('artistId')
+        self.type = info.get('type')
+
+    def __str__(self):
+        return self.title
