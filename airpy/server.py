@@ -5,12 +5,12 @@ import os
 import sys
 
 from pathlib import Path
-from .music_folder import MusicFolder
-from .index import Index
-from .genres import GenreList
-from .artistslist import ArtistList
-from .artist import Artist
-from .album import Album
+from airpy.music_folder import MusicFolder
+from airpy.index import Index
+from airpy.genres import GenreList
+from airpy.artistslist import ArtistList
+from airpy.artist import Artist
+from airpy.album import Album
 
 import settings as setting
 

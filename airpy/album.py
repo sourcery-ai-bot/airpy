@@ -1,4 +1,4 @@
-from .song import Song
+from airpy.song import Song
 
 class Album:
     def __init__(self, info):
