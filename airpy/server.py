@@ -6,6 +6,7 @@ import sys
 
 import settings as setting
 
+from pathlib import Path
 
 class Server:
     def __init__(self):
@@ -113,7 +114,7 @@ class Album:
     def parse_songs(self, songs):
         parsed_songs = []
         for song in songs:
-            parsed_songs.append(s.Song(song))
+            parsed_songs.append(Song(song))
         return sorted(parsed_songs, key=lambda x: x.track)
 
 
@@ -282,13 +283,13 @@ class Song:
         return self.title
            
     def _cached_file(self):
-        s = server.Server()
+        server = Server()
         cache_file = (self.cache_dir + '/' +
                    self.artist + ' - ' + 
                    self.album + ' - ' +
                    str(self.track) + ' - ' +
                    self.title + '.' + 
-                   s.format)
+                   server.format)
         return cache_file
 
     
@@ -307,11 +308,11 @@ class Song:
             Path(self.cache_file).touch()
             if not os.path.exists(self.cache_dir):
                 os.mkdir(self.cache_dir)
-            s = server.Server()
-            data = s.get_stream('stream',
+            server = Server()
+            data = server.get_stream('stream',
                                     id=self.id,
-                                    format=s.format,
-                                    maxBitRate=s.max_bitrate)
+                                    format=server.format,
+                                    maxBitRate=server.max_bitrate)
             with open (self.cache_file, 'wb') as fd:
                 fd.write(data)
                 fd.close()
