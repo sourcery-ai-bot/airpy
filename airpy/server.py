@@ -44,10 +44,12 @@ class Server:
         return '&'.join(params)
 
     def additional_param_parser(self, **kwargs):
-        parsed_params = []
-        for param in kwargs:
-            if kwargs[param] is not None:
-                parsed_params.append(param + '=' + str(kwargs[param]))
+        parsed_params = [
+            param + '=' + str(kwargs[param])
+            for param in kwargs
+            if kwargs[param] is not None
+        ]
+
         return '&'.join(parsed_params)
 
     def get(self, action, **kwargs):
@@ -112,9 +114,7 @@ class Album:
         return self.name
 
     def parse_songs(self, songs):
-        parsed_songs = []
-        for song in songs:
-            parsed_songs.append(Song(song))
+        parsed_songs = [Song(song) for song in songs]
         return sorted(parsed_songs, key=lambda x: x.track)
 
 
@@ -128,10 +128,7 @@ class Artist:
         self.albums_by_release = self.parse_albums_by_release()
 
     def parse_albums(self, albums):
-        parsed_albums = []
-        for album in albums:
-            parsed_albums.append(Album(album))
-        return parsed_albums
+        return [Album(album) for album in albums]
 
     def parse_albums_by_release(self):
         return sorted(self.albums, key=lambda x: x.year)
@@ -143,10 +140,7 @@ class ArtistList:
         self.list = self.drop_letter_index()
 
     def parse_letters(self, index):
-        parsed_letters = []
-        for letter in index:
-            parsed_letters.append(Letter(letter))
-        return parsed_letters
+        return [Letter(letter) for letter in index]
 
     def drop_letter_index(self):
         artists = []
@@ -160,10 +154,7 @@ class GenreList:
         self.list = self.parse_genres(genre_list)
 
     def parse_genres(self, genre_list):
-        parsed_genres = []
-        for genre in genre_list:
-            parsed_genres.append(Genre(genre))
-        return parsed_genres
+        return [Genre(genre) for genre in genre_list]
 
     def by_name(self):
         return sorted(self.list, key=lambda x: x.name.lower())
@@ -195,10 +186,7 @@ class Index:
         self.letters = self.parse_letters(info.get('index', [{}]))
 
     def parse_letters(self, alpha_list):
-        letters = []
-        for letter in alpha_list:
-            letters.append(Letter(letter))
-        return letters
+        return [Letter(letter) for letter in alpha_list]
 
 
 class IndexArtist:
@@ -219,10 +207,7 @@ class Letter:
         return self.name
 
     def parse_artists(self, artists):
-        parsed_artists = []
-        for artist in artists:
-            parsed_artists.append(IndexArtist(artist))
-        return parsed_artists
+        return [IndexArtist(artist) for artist in artists]
 
 
 class MusicFolder:
@@ -242,10 +227,7 @@ class MusicFolderList:
         self.list = self.parse_music_folder_list(music_folder_list)
 
     def parse_music_folder_list(self, folders):
-        music_folders = []
-        for folder in folders:
-            music_folders.append(MusicFolder(folders[folder][0]))
-        return music_folders
+        return [MusicFolder(folders[folder][0]) for folder in folders]
         
 
 class Song:
@@ -284,13 +266,12 @@ class Song:
            
     def _cached_file(self):
         server = Server()
-        cache_file = (self.cache_dir + '/' +
-                   self.artist + ' - ' + 
-                   self.album + ' - ' +
-                   str(self.track) + ' - ' +
-                   self.title + '.' + 
-                   server.format)
-        return cache_file
+        return (self.cache_dir + '/' +
+                       self.artist + ' - ' + 
+                       self.album + ' - ' +
+                       str(self.track) + ' - ' +
+                       self.title + '.' + 
+                       server.format)
 
     
     def play(self):
@@ -302,9 +283,7 @@ class Song:
             self.play()
 
     def cache(self):
-        if os.path.exists(self.cache_file):
-            self.cached = True
-        else:
+        if not os.path.exists(self.cache_file):
             Path(self.cache_file).touch()
             if not os.path.exists(self.cache_dir):
                 os.mkdir(self.cache_dir)
@@ -316,4 +295,4 @@ class Song:
             with open (self.cache_file, 'wb') as fd:
                 fd.write(data)
                 fd.close()
-            self.cached = True 
+        self.cached = True 
